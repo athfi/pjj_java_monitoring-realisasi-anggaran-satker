@@ -6,7 +6,7 @@ import java.util.Locale;
 
 public class PaguAkun {
     private Long id;
-    private Long satkerId;
+    private Satker satker;
     private String kodeAkun;
     private String namaAkun;
     private int tahunAnggaran;
@@ -16,8 +16,8 @@ public class PaguAkun {
     public PaguAkun() {
     }
 
-    public PaguAkun(Long satkerId, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
-        this.satkerId = satkerId;
+    public PaguAkun(Satker satker, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
+        this.satker = satker;
         this.kodeAkun = kodeAkun;
         this.namaAkun = namaAkun;
         this.tahunAnggaran = tahunAnggaran;
@@ -25,9 +25,9 @@ public class PaguAkun {
         this.nilaiPagu = nilaiPagu;
     }
 
-    public PaguAkun(Long id, Long satkerId, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
+    public PaguAkun(Long id, Satker satker, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
         this.id = id;
-        this.satkerId = satkerId;
+        this.satker = satker;
         this.kodeAkun = kodeAkun;
         this.namaAkun = namaAkun;
         this.tahunAnggaran = tahunAnggaran;
@@ -43,12 +43,12 @@ public class PaguAkun {
         this.id = id;
     }
 
-    public Long getSatkerId() {
-        return satkerId;
+    public Satker getSatker() {
+        return satker;
     }
 
-    public void setSatkerId(Long satkerId) {
-        this.satkerId = satkerId;
+    public void setSatker(Satker satker) {
+        this.satker = satker;
     }
 
     public String getKodeAkun() {
@@ -99,7 +99,8 @@ public class PaguAkun {
         
         return "PaguAkun{" +
                 "ID= " + id +
-                ", ID Satker= " + satkerId +
+                ", ID Satker= " + satker.getKodeSatker() +
+                ", Nama Satker= " + satker.getNamaSatker() +
                 ", Kode Akun= '" + kodeAkun + '\'' +
                 ", Nama Akun= '" + namaAkun + '\'' +
                 ", Tahun Anggaran= " + tahunAnggaran +
