@@ -1,7 +1,9 @@
 package model;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.util.Locale;
 
 public class Realisasi {
     private Long id;
@@ -70,12 +72,16 @@ public class Realisasi {
 
     @Override
     public String toString() {
+        NumberFormat rupiah = NumberFormat.getCurrencyInstance(
+            Locale.forLanguageTag("id-ID")
+        );
+        
         return "Realisasi{" +
-                "id=" + id +
-                ", paguId=" + paguId +
-                ", tanggalRealisasi=" + tanggalRealisasi +
-                ", nilaiRealisasi=" + nilaiRealisasi +
-                ", keterangan='" + keterangan + '\'' +
+                "ID= " + id +
+                ", ID Pagu= " + paguId +
+                ", Tanggal Realisasi= " + tanggalRealisasi +
+                ", Nilai Realisasi= " + rupiah.format(nilaiRealisasi) +
+                ", Keterangan= '" + keterangan + '\'' +
                 '}';
     }
 }
