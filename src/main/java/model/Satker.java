@@ -46,9 +46,9 @@ public class Satker {
     @Override
     public String toString() {
         return "Satker{" +
-                "id=" + id +
-                ", kodeSatker='" + kodeSatker + '\'' +
-                ", namaSatker='" + namaSatker + '\'' +
+                "ID= " + id +
+                ", Kode Satker= '" + kodeSatker + '\'' +
+                ", Nama Satker= '" + namaSatker + '\'' +
                 '}';
     }
 }
