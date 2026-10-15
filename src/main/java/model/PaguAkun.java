@@ -1,6 +1,8 @@
 package model;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class PaguAkun {
     private Long id;
@@ -91,14 +93,18 @@ public class PaguAkun {
 
     @Override
     public String toString() {
+        NumberFormat rupiah = NumberFormat.getCurrencyInstance(
+            Locale.forLanguageTag("id-ID")
+        );
+        
         return "PaguAkun{" +
-                "id=" + id +
-                ", satkerId=" + satkerId +
-                ", kodeAkun='" + kodeAkun + '\'' +
-                ", namaAkun='" + namaAkun + '\'' +
-                ", tahunAnggaran=" + tahunAnggaran +
-                ", deskripsiKegiatan='" + deskripsiKegiatan + '\'' +
-                ", nilaiPagu=" + nilaiPagu +
+                "ID= " + id +
+                ", ID Satker= " + satkerId +
+                ", Kode Akun= '" + kodeAkun + '\'' +
+                ", Nama Akun= '" + namaAkun + '\'' +
+                ", Tahun Anggaran= " + tahunAnggaran +
+                ", Kegiatan= '" + deskripsiKegiatan + '\'' +
+                ", Pagu= " + rupiah.format(nilaiPagu) +
                 '}';
     }
 }
