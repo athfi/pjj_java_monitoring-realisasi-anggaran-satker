@@ -1,5 +1,4 @@
-# Panduan Capstone Topik B — H2 untuk Pemula
-
+# Panduan Capstone Topik B — H2
 **Aplikasi:** Monitoring Realisasi Anggaran Satker  
 **Versi:** 1.5 · revisi dataset Suku Dinas · 15 Oktober 2026  
 **Skenario demo:** simulasi Suku Dinas Pertamanan dan Hutan Kota DKI Jakarta, dari `setup_demo1.sql`  
