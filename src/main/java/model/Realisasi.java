@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class Realisasi {
     private Long id;
-    private Long paguId;
+    private PaguAkun paguAkun;
     private LocalDate tanggalRealisasi;
     private BigDecimal nilaiRealisasi;
     private String keterangan;
@@ -15,16 +15,16 @@ public class Realisasi {
     public Realisasi() {
     }
 
-    public Realisasi(Long paguId, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
-        this.paguId = paguId;
+    public Realisasi(PaguAkun paguAkun, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+        this.paguAkun = paguAkun;
         this.tanggalRealisasi = tanggalRealisasi;
         this.nilaiRealisasi = nilaiRealisasi;
         this.keterangan = keterangan;
     }
 
-    public Realisasi(Long id, Long paguId, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+    public Realisasi(Long id, PaguAkun paguAkun, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
         this.id = id;
-        this.paguId = paguId;
+        this.paguAkun = paguAkun;
         this.tanggalRealisasi = tanggalRealisasi;
         this.nilaiRealisasi = nilaiRealisasi;
         this.keterangan = keterangan;
@@ -38,12 +38,12 @@ public class Realisasi {
         this.id = id;
     }
 
-    public Long getPaguId() {
-        return paguId;
+    public PaguAkun  getPaguAkun() {
+        return paguAkun;
     }
 
-    public void setPaguId(Long paguId) {
-        this.paguId = paguId;
+    public void setPaguId(PaguAkun paguAkun) {
+        this.paguAkun = paguAkun;
     }
 
     public LocalDate getTanggalRealisasi() {
@@ -78,7 +78,9 @@ public class Realisasi {
         
         return "Realisasi{" +
                 "ID= " + id +
-                ", ID Pagu= " + paguId +
+                ", Kode Akun= " + paguAkun.getKodeAkun() +
+                ", Nama Akun= " + paguAkun.getNamaAkun() +
+                ", Nama Kegiatan= " + paguAkun.getDeskripsiKegiatan() +
                 ", Tanggal Realisasi= " + tanggalRealisasi +
                 ", Nilai Realisasi= " + rupiah.format(nilaiRealisasi) +
                 ", Keterangan= '" + keterangan + '\'' +
