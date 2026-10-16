@@ -1,8 +1,7 @@
--- DATA DUMMY CAPSTONE TOPIK B - H2 EMBEDDED
+-- DATA DUMMY CAPSTONE TOPIK B PostgreSQL
 -- SKENARIO: SIMULASI SUKU DINAS PERTAMANAN & HUTAN KOTA DKI JAKARTA
 -- Sumber: setup_demo1.sql versi Suku Dinas; seluruh data merupakan simulasi.
 -- Nama unit, kode, akun, kegiatan, SP2D, tanggal, nominal dan keterangan dipertahankan.
--- Dialek H2 standar; tidak memerlukan MODE=MySQL atau server database.
 -- PERINGATAN: menghapus dan membuat ulang tabel realisasi, pagu_akun, satker.
 -- Jalankan manual pada database latihan, satu kali saat setup atau saat reset uji.
 -- Jangan jalankan dari MainConsole setiap kali aplikasi dibuka.
