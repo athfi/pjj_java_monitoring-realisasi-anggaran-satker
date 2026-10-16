@@ -180,10 +180,36 @@ public class ConsoleView {
     }
     
     // Sub-menu Impor CSV buatan Chandra
+//    private void menuImporCsv() {
+//        System.out.println("\n--- IMPOR DATA CSV ---");
+//        System.out.println("Fitur ini akan segera dibangun menggunakan Apache Commons CSV.");
+//        System.out.println("Tekan Enter untuk kembali...");
+//        scanner.nextLine();
+//    }
+    // Sub-menu Impor CSV buatan Chandra
     private void menuImporCsv() {
         System.out.println("\n--- IMPOR DATA CSV ---");
-        System.out.println("Fitur ini akan segera dibangun menggunakan Apache Commons CSV.");
-        System.out.println("Tekan Enter untuk kembali...");
-        scanner.nextLine();
+        System.out.println("1. Impor Data Satker (dari imports/import_satker_sudin.csv)");
+        System.out.println("2. Impor Data Pagu (dari imports/import_pagu_akun_sudin.csv)");
+        System.out.println("0. Kembali");
+        System.out.print("Pilih file yang akan diimpor: ");
+        
+        String pilihan = scanner.nextLine();
+        
+        if (pilihan.equals("0")) return;
+        
+        System.out.println("\n-> Membaca file...");
+        // Di sini nanti Controller buatan W akan mengecek isi file
+        System.out.println("-> Ringkasan: Ditemukan 5 baris data valid."); // Ini contoh angka dummy
+        
+        System.out.print("Apakah Anda yakin ingin menyimpan data ini ke database? (Y/N): ");
+        String konfirmasi = scanner.nextLine();
+        
+        if (konfirmasi.equalsIgnoreCase("Y")) {
+            System.out.println("-> [Proses simpan berjalan... Menunggu Controller W]");
+        } else {
+            System.out.println("-> Impor dibatalkan.");
+        }
     }
+    
 }
