@@ -10,4 +10,13 @@
         <maven.compiler.release>26</maven.compiler.release>
         <exec.mainClass>com.mycompany.monitoringrealisasi.MonitoringRealisasi</exec.mainClass>
     </properties>
+
+    <!-- Pastikan tag pembungkus <dependencies> ini ADA -->
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+    </dependencies>
 </project>

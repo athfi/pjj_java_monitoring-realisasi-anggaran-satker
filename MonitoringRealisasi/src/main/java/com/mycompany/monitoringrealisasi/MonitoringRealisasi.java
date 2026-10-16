@@ -1,16 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.mycompany.monitoringrealisasi;
 
-/**
- *
- * @author 910222957
- */
-public class MonitoringRealisasi {
+import view.ConsoleView;
 
+public class MonitoringRealisasi {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        System.out.println("Sistem memuat data...");
+        
+        // Memanggil dan menjalankan menu buatan Chandra (C)
+        ConsoleView view = new ConsoleView();
+        view.mulai();
     }
 }
