@@ -6,6 +6,7 @@ import java.util.Locale;
 
 public class PaguAkun {
     private Long id;
+    private Long satkerId;
     private Satker satker;
     private String kodeAkun;
     private String namaAkun;
@@ -18,6 +19,18 @@ public class PaguAkun {
 
     public PaguAkun(Satker satker, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
         this.satker = satker;
+        if (satker != null) {
+            this.satkerId = satker.getId();
+        }
+        this.kodeAkun = kodeAkun;
+        this.namaAkun = namaAkun;
+        this.tahunAnggaran = tahunAnggaran;
+        this.deskripsiKegiatan = deskripsiKegiatan;
+        this.nilaiPagu = nilaiPagu;
+    }
+
+    public PaguAkun(Long satkerId, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
+        this.satkerId = satkerId;
         this.kodeAkun = kodeAkun;
         this.namaAkun = namaAkun;
         this.tahunAnggaran = tahunAnggaran;
@@ -28,6 +41,19 @@ public class PaguAkun {
     public PaguAkun(Long id, Satker satker, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
         this.id = id;
         this.satker = satker;
+        if (satker != null) {
+            this.satkerId = satker.getId();
+        }
+        this.kodeAkun = kodeAkun;
+        this.namaAkun = namaAkun;
+        this.tahunAnggaran = tahunAnggaran;
+        this.deskripsiKegiatan = deskripsiKegiatan;
+        this.nilaiPagu = nilaiPagu;
+    }
+
+    public PaguAkun(Long id, Long satkerId, String kodeAkun, String namaAkun, int tahunAnggaran, String deskripsiKegiatan, BigDecimal nilaiPagu) {
+        this.id = id;
+        this.satkerId = satkerId;
         this.kodeAkun = kodeAkun;
         this.namaAkun = namaAkun;
         this.tahunAnggaran = tahunAnggaran;
@@ -43,12 +69,26 @@ public class PaguAkun {
         this.id = id;
     }
 
+    public Long getSatkerId() {
+        if (satkerId != null) {
+            return satkerId;
+        }
+        return satker != null ? satker.getId() : null;
+    }
+
+    public void setSatkerId(Long satkerId) {
+        this.satkerId = satkerId;
+    }
+
     public Satker getSatker() {
         return satker;
     }
 
     public void setSatker(Satker satker) {
         this.satker = satker;
+        if (satker != null) {
+            this.satkerId = satker.getId();
+        }
     }
 
     public String getKodeAkun() {
@@ -97,15 +137,18 @@ public class PaguAkun {
             Locale.forLanguageTag("id-ID")
         );
         
+        String infoSatker = (satker != null) 
+                ? (satker.getKodeSatker() + " - " + satker.getNamaSatker()) 
+                : ("ID=" + satkerId);
+
         return "PaguAkun{" +
                 "ID= " + id +
-                ", ID Satker= " + satker.getKodeSatker() +
-                ", Nama Satker= " + satker.getNamaSatker() +
+                ", Satker= " + infoSatker +
                 ", Kode Akun= '" + kodeAkun + '\'' +
                 ", Nama Akun= '" + namaAkun + '\'' +
                 ", Tahun Anggaran= " + tahunAnggaran +
                 ", Kegiatan= '" + deskripsiKegiatan + '\'' +
-                ", Pagu= " + rupiah.format(nilaiPagu) +
+                ", Pagu= " + (nilaiPagu != null ? rupiah.format(nilaiPagu) : "0") +
                 '}';
     }
 }

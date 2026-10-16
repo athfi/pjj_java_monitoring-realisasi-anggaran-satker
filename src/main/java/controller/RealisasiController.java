@@ -3,14 +3,22 @@ package controller;
 import dao.RealisasiDAO;
 import exception.PaguExceededException;
 import model.Realisasi;
+import service.BudgetService;
 
 import java.util.List;
 
 public class RealisasiController {
     private final RealisasiDAO realisasiDAO;
+    private final BudgetService budgetService;
 
     public RealisasiController(RealisasiDAO realisasiDAO) {
         this.realisasiDAO = realisasiDAO;
+        this.budgetService = null;
+    }
+
+    public RealisasiController(RealisasiDAO realisasiDAO, BudgetService budgetService) {
+        this.realisasiDAO = realisasiDAO;
+        this.budgetService = budgetService;
     }
 
     public List<Realisasi> getAllRealisasi() {
@@ -22,7 +30,10 @@ public class RealisasiController {
     }
 
     public void catatRealisasi(Realisasi realisasi) throws PaguExceededException {
-        // TODO: Validasi nilai realisasi > 0, cek sisa pagu, lempar PaguExceededException jika melampaui
-        realisasiDAO.insert(realisasi);
+        if (budgetService != null) {
+            budgetService.catatRealisasi(realisasi);
+        } else {
+            realisasiDAO.insert(realisasi);
+        }
     }
 }

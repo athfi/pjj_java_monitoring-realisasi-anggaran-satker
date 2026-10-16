@@ -7,7 +7,9 @@ import java.util.Locale;
 
 public class Realisasi {
     private Long id;
+    private Long paguId;
     private PaguAkun paguAkun;
+    private String nomorSp2d;
     private LocalDate tanggalRealisasi;
     private BigDecimal nilaiRealisasi;
     private String keterangan;
@@ -15,16 +17,41 @@ public class Realisasi {
     public Realisasi() {
     }
 
-    public Realisasi(PaguAkun paguAkun, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
-        this.paguAkun = paguAkun;
+    public Realisasi(Long paguId, String nomorSp2d, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+        this.paguId = paguId;
+        this.nomorSp2d = nomorSp2d;
         this.tanggalRealisasi = tanggalRealisasi;
         this.nilaiRealisasi = nilaiRealisasi;
         this.keterangan = keterangan;
     }
 
-    public Realisasi(Long id, PaguAkun paguAkun, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+    public Realisasi(PaguAkun paguAkun, String nomorSp2d, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+        this.paguAkun = paguAkun;
+        if (paguAkun != null) {
+            this.paguId = paguAkun.getId();
+        }
+        this.nomorSp2d = nomorSp2d;
+        this.tanggalRealisasi = tanggalRealisasi;
+        this.nilaiRealisasi = nilaiRealisasi;
+        this.keterangan = keterangan;
+    }
+
+    public Realisasi(Long id, Long paguId, String nomorSp2d, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
+        this.id = id;
+        this.paguId = paguId;
+        this.nomorSp2d = nomorSp2d;
+        this.tanggalRealisasi = tanggalRealisasi;
+        this.nilaiRealisasi = nilaiRealisasi;
+        this.keterangan = keterangan;
+    }
+
+    public Realisasi(Long id, PaguAkun paguAkun, String nomorSp2d, LocalDate tanggalRealisasi, BigDecimal nilaiRealisasi, String keterangan) {
         this.id = id;
         this.paguAkun = paguAkun;
+        if (paguAkun != null) {
+            this.paguId = paguAkun.getId();
+        }
+        this.nomorSp2d = nomorSp2d;
         this.tanggalRealisasi = tanggalRealisasi;
         this.nilaiRealisasi = nilaiRealisasi;
         this.keterangan = keterangan;
@@ -38,12 +65,34 @@ public class Realisasi {
         this.id = id;
     }
 
-    public PaguAkun  getPaguAkun() {
+    public Long getPaguId() {
+        if (paguId != null) {
+            return paguId;
+        }
+        return paguAkun != null ? paguAkun.getId() : null;
+    }
+
+    public void setPaguId(Long paguId) {
+        this.paguId = paguId;
+    }
+
+    public PaguAkun getPaguAkun() {
         return paguAkun;
     }
 
-    public void setPaguId(PaguAkun paguAkun) {
+    public void setPaguAkun(PaguAkun paguAkun) {
         this.paguAkun = paguAkun;
+        if (paguAkun != null) {
+            this.paguId = paguAkun.getId();
+        }
+    }
+
+    public String getNomorSp2d() {
+        return nomorSp2d;
+    }
+
+    public void setNomorSp2d(String nomorSp2d) {
+        this.nomorSp2d = nomorSp2d;
     }
 
     public LocalDate getTanggalRealisasi() {
@@ -75,14 +124,17 @@ public class Realisasi {
         NumberFormat rupiah = NumberFormat.getCurrencyInstance(
             Locale.forLanguageTag("id-ID")
         );
-        
+
+        String infoPagu = (paguAkun != null) 
+                ? (paguAkun.getKodeAkun() + " - " + paguAkun.getNamaAkun()) 
+                : ("PaguID=" + paguId);
+
         return "Realisasi{" +
                 "ID= " + id +
-                ", Kode Akun= " + paguAkun.getKodeAkun() +
-                ", Nama Akun= " + paguAkun.getNamaAkun() +
-                ", Nama Kegiatan= " + paguAkun.getDeskripsiKegiatan() +
+                ", SP2D= '" + nomorSp2d + '\'' +
+                ", Pagu= " + infoPagu +
                 ", Tanggal Realisasi= " + tanggalRealisasi +
-                ", Nilai Realisasi= " + rupiah.format(nilaiRealisasi) +
+                ", Nilai Realisasi= " + (nilaiRealisasi != null ? rupiah.format(nilaiRealisasi) : "0") +
                 ", Keterangan= '" + keterangan + '\'' +
                 '}';
     }
