@@ -1,6 +1,7 @@
 # Monitoring Realisasi Anggaran Satker
 
-**Panduan penguji · Windows 11 · JDK 25 · NetBeans · PostgreSQL 18 · AI lokal KoboldCpp**
+**Panduan penguji · Windows 11 · JDK 25 · NetBeans · PostgreSQL 18 · AI lokal KoboldCpp
+Alamat repo: [github.com/athfi/pjj_java_monitoring-realisasi-anggaran-satker](https://github.com/athfi/pjj_java_monitoring-realisasi-anggaran-satker)**
 
 Aplikasi membantu petugas mengelola Satker, pagu dan realisasi serta melihat sisa anggaran. Dataset simulasi memakai skenario **Suku Dinas Pertamanan dan Hutan Kota DKI Jakarta**. Angka resmi dihitung Java; AI memberi jawaban atas teks yang dikirim pengguna.
 
@@ -42,7 +43,6 @@ Tes otomatis yang sudah tercatat memakai database uji terpisah. Hasil tersebut t
    $modelInfo = Invoke-RestMethod -Uri 'http://localhost:5001/v1/models'
    $modelInfo.data[0].id
    ```
-
 4. Buat folder **`config` sejajar `pom.xml`**, lalu buat **`config/ai.properties`**:
 
    ```properties
@@ -57,7 +57,6 @@ Tes otomatis yang sudah tercatat memakai database uji terpisah. Hasil tersebut t
    ```text
    Halo, jelaskan fungsi DAO dalam satu kalimat.
    ```
-
 6. Uji data anggaran dengan satu baris berikut:
 
    ```text
@@ -75,12 +74,12 @@ Tes otomatis yang sudah tercatat memakai database uji terpisah. Hasil tersebut t
 - [ ] Tutup KoboldCpp, lalu kirim pertanyaan: tampil pesan AI tidak tersedia tanpa program berhenti mendadak.
 - [ ] Ubah `ai.enabled=false`, restart Java: tampil pesan AI dinonaktifkan. Aplikasi core tetap dapat digunakan tanpa AI.
 
-| Gejala | Periksa |
-| --- | --- |
-| `com.google.gson` tidak ditemukan | Dependency Gson `2.13.2` pada `pom.xml`, lalu build ulang. |
-| Koneksi PostgreSQL gagal | Server/port, database/user/password, driver JDBC dan status implementasi pada SDD. |
+| Gejala                                  | Periksa                                                                                             |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `com.google.gson` tidak ditemukan     | Dependency Gson `2.13.2` pada `pom.xml`, lalu build ulang.                                      |
+| Koneksi PostgreSQL gagal                | Server/port, database/user/password, driver JDBC dan status implementasi pada SDD.                  |
 | AI dinonaktifkan/konfigurasi belum siap | Lokasi `config/ai.properties`, nilai `ai.enabled`, working directory root proyek; restart Java. |
-| KoboldCpp tidak dapat dihubungi | Model sudah dimuat; perintah PowerShell pada langkah 3 berhasil. |
-| Waktu tunggu AI habis | Periksa progres KoboldCpp; service saat diperiksa menunggu maksimal 120 detik. |
+| KoboldCpp tidak dapat dihubungi         | Model sudah dimuat; perintah PowerShell pada langkah 3 berhasil.                                    |
+| Waktu tunggu AI habis                   | Periksa progres KoboldCpp; service saat diperiksa menunggu maksimal 120 detik.                      |
 
 **Tim:** Saverio Ratu, Wawan Istiyono, A’thfi Rijal Mufied, Chandra Anshori, Rizaldy Dhaniar. Konfigurasi lokal, password dan model GGUF tidak dikumpulkan sebagai source code.
