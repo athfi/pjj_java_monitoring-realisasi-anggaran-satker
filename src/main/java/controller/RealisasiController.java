@@ -6,19 +6,20 @@ import model.Realisasi;
 import service.BudgetService;
 
 import java.util.List;
+import java.util.Objects;
+import util.Validasi;
 
 public class RealisasiController {
     private final RealisasiDAO realisasiDAO;
     private final BudgetService budgetService;
 
     public RealisasiController(RealisasiDAO realisasiDAO) {
-        this.realisasiDAO = realisasiDAO;
-        this.budgetService = null;
+        this(realisasiDAO, new BudgetService());
     }
 
     public RealisasiController(RealisasiDAO realisasiDAO, BudgetService budgetService) {
-        this.realisasiDAO = realisasiDAO;
-        this.budgetService = budgetService;
+        this.realisasiDAO = Objects.requireNonNull(realisasiDAO);
+        this.budgetService = Objects.requireNonNull(budgetService, "BudgetService wajib tersedia");
     }
 
     public List<Realisasi> getAllRealisasi() {
@@ -26,14 +27,13 @@ public class RealisasiController {
     }
 
     public Realisasi getRealisasiById(long id) {
-        return realisasiDAO.findById(id);
+        Validasi.id(id, "Realisasi ID");
+        Realisasi realisasi = realisasiDAO.findById(id);
+        if (realisasi == null) throw new IllegalArgumentException("Realisasi tidak ditemukan.");
+        return realisasi;
     }
 
     public void catatRealisasi(Realisasi realisasi) throws PaguExceededException {
-        if (budgetService != null) {
-            budgetService.catatRealisasi(realisasi);
-        } else {
-            realisasiDAO.insert(realisasi);
-        }
+        budgetService.catatRealisasi(realisasi);
     }
 }
