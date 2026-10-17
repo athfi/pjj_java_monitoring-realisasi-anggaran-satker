@@ -237,7 +237,8 @@ classDiagram
     Satker "1" --> "0..*" PaguAkun : memiliki
     PaguAkun "1" --> "0..*" Realisasi : mencakup
 
-    CrudRepository~T~ <|.. PaguAkunDAO : s5
+    CrudRepository~T~ <|.. SatkerDAO
+    CrudRepository~T~ <|.. PaguAkunDAO
     CrudRepository~T~ <|.. RealisasiDAO
 
     SatkerController --> CrudRepository~T~
