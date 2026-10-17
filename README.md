@@ -1,7 +1,7 @@
 # Monitoring Realisasi Anggaran Satker
 
 **Capstone Project – Action Learning PJJ Java Fundamental 2026**  
-**Topik B | Java + JDBC + H2**
+**Topik B | Java + JDBC + PostgreSQL**
 
 ## Deskripsi
 
@@ -43,7 +43,7 @@ Console adalah antarmuka awal. GUI Swing merupakan tambahan opsional setelah fit
 - H2 2.2.224, embedded dan berbasis file
 - Antarmuka Console; Swing opsional
 
-Catatan pilihan database: soal capstone awal menyebut MySQL atau PostgreSQL, sedangkan desain proyek saat ini menggunakan H2. Catat perubahan ini dalam laporan dan pastikan kesesuaiannya dengan arahan pengajar.
+Catatan pilihan database: soal capstone awal menyebut MySQL atau PostgreSQL, sedangkan desain proyek saat ini menggunakan PostgreSQL. Catat perubahan ini dalam laporan dan pastikan kesesuaiannya dengan arahan pengajar.
 
 ## Menjalankan Aplikasi
 
