@@ -1,0 +1,5 @@
+# Konfigurasi Koneksi Database H2
+# Salin file ini menjadi db.properties lalu sesuaikan jika diperlukan.
+db.url=jdbc:h2:./data/monitoring_anggaran
+db.user=sa
+db.password=
