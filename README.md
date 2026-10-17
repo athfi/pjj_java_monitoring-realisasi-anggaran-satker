@@ -1,83 +1,86 @@
 # Monitoring Realisasi Anggaran Satker
 
-**Capstone Project – Action Learning PJJ Java Fundamental 2026**  
-**Topik B | Java + JDBC + H2**
+**Panduan penguji · Windows 11 · JDK 25 · NetBeans · PostgreSQL 18 · AI lokal KoboldCpp**
 
-## Deskripsi
+Aplikasi membantu petugas mengelola Satker, pagu dan realisasi serta melihat sisa anggaran. Dataset simulasi memakai skenario **Suku Dinas Pertamanan dan Hutan Kota DKI Jakarta**. Angka resmi dihitung Java; AI memberi jawaban atas teks yang dikirim pengguna.
 
-Aplikasi Java untuk mengelola data satuan kerja (Satker), pagu akun, dan transaksi realisasi anggaran. Aplikasi memantau sisa pagu, menolak realisasi yang melampaui anggaran tersedia, serta menyajikan rekapitulasi per akun dan Satker.
+**Baca dua dokumen saja:** README ini untuk menjalankan dan memeriksa aplikasi; [SDD.md](SDD.md) untuk arsitektur, diagram kelas/DB, aturan bisnis dan bukti pengujian. [Capstone_Action_Learning_Java.pdf](Capstone_Action_Learning_Java.pdf) adalah dokumen tugas asli yang dipertahankan utuh.
 
-Proyek ini menerapkan Java Fundamental, Object-Oriented Programming (OOP), JDBC, basis data relasional, dan penanganan exception.
+**Status verifikasi:** PostgreSQL **18** adalah database penyerahan yang ditetapkan tim. Salinan kode yang diperiksa masih memerlukan penyelarasan driver, koneksi dan startup PostgreSQL; rincian ada di [status implementasi](SDD.md#10-status-implementasi-dan-bukti-uji). Langkah PostgreSQL di bawah adalah persiapan untuk versi final, belum merupakan klaim bahwa koneksi Java ke PostgreSQL sudah lulus. Uji chat AI dapat dilakukan secara terpisah sekarang.
 
-## Anggota Kelompok
+## 1. Buka dan build proyek
 
-| No. | Nama | NIP |
-|---:|---|---|
-| 1 | Saverio Ratu | 198511232007101001 |
-| 2 | Wawan Istiyono | 198701232010121004 |
-| 3 | A’thfi Rijal Mufied | 198806162009121001 |
-| 4 | Chandra Anshori | 199508132015021001 |
-| 5 | Rizaldy Dhaniar | 199812162018011003 |
+1. Unduh/clone repository tim atau ekstrak paket penyerahan. Pastikan `pom.xml`, `src/main/java/MainConsole.java` dan `src/main/java/MainUjiAi.java` tersedia. Jika file AI belum ada, minta paket terbaru kepada tim.
+2. NetBeans → **File → Open Project** → pilih **root folder yang berisi `pom.xml` dan `src`**. Gunakan proyek Java 25 ini; folder nested `MonitoringRealisasi/` adalah proyek lain.
+3. Pastikan JDK 25 tersedia. Klik kanan proyek → **Clean and Build**. Tunggu **BUILD SUCCESS** dan semua tes lulus. Internet diperlukan untuk dependency awal; setelah model dan dependency tersedia, inferensi AI dapat berjalan lokal.
 
-## Status Repository
+Tes otomatis yang sudah tercatat memakai database uji terpisah. Hasil tersebut tidak menggantikan uji koneksi PostgreSQL 18.
 
-Saat ini repository berisi dokumentasi proyek dan script database H2. Source code Java dan `pom.xml` belum tersedia di repository ini, sehingga clone repository ini saja belum cukup untuk menjalankan aplikasi.
+## 2. Siapkan database PostgreSQL 18
 
-## Fitur
+1. Pasang/jalankan [PostgreSQL 18 dan pgAdmin](https://www.postgresql.org/download/windows/). Catat user, password dan port lokal; port standar adalah `5432`.
+2. Di pgAdmin, buat database latihan baru bernama `monitoring_anggaran`. Pilih database itu → **Query Tool** → buka `setup_demo.sql` dari root proyek → jalankan. Script **menghapus dan membuat ulang tiga tabel**; gunakan database latihan, bukan database dengan data yang hendak dipertahankan.
+3. Hasil awal harus **12 Satker, 26 pagu, 52 realisasi**. Dataset awal tahun 2026: pagu **Rp4.050.000.000**, realisasi **Rp1.798.750.000**, sisa **Rp2.251.250.000**, serapan **44,41%**.
+4. Buat **`db.properties` di root proyek, sejajar `pom.xml`**:
 
-- CRUD data Satker.
-- Pengelolaan pagu akun dan kegiatan anggaran.
-- Pencatatan dan pembacaan realisasi berdasarkan nomor SP2D yang unik.
-- Validasi agar realisasi baru tidak melebihi sisa pagu.
-- Rekapitulasi pagu, realisasi, sisa, dan persentase per akun atau Satker.
-- Pesan kesalahan yang mudah dipahami untuk input tidak valid dan masalah database.
+   ```properties
+   db.url=jdbc:postgresql://localhost:5432/monitoring_anggaran
+   db.user=USER_POSTGRESQL_ANDA
+   db.password=PASSWORD_POSTGRESQL_ANDA
+   ```
 
-Console adalah antarmuka awal. GUI Swing merupakan tambahan opsional setelah fitur utama berjalan.
+   Ganti user/password dan port sesuai perangkat. Pada versi PostgreSQL final, driver Maven `org.postgresql:postgresql` harus tersedia dan startup memakai tabel yang sudah dibuat. [Format koneksi JDBC](https://jdbc.postgresql.org/documentation/use/)
+5. Setelah penyelarasan kode tersebut selesai, jalankan **Source Packages → `<default package>` → `MainConsole.java` → Run File**. File yang diperiksa saat ini adalah demo akses data dan rekap; menu pengelolaan akhir perlu dibedakan dari demo ini. Cocokkan angka dengan langkah 3. Jika belum berhasil, catat uji PostgreSQL sebagai **belum lulus**, lalu laporkan pesan error kepada tim.
 
-## Teknologi dan Database
+## 3. Jalankan AI lokal pada perangkat penguji
 
-- Java 25
-- Apache NetBeans 31
-- Maven
-- JDBC
-- H2 2.2.224, embedded dan berbasis file
-- Antarmuka Console; Swing opsional
+1. Unduh executable Windows dari [rilis KoboldCpp](https://github.com/LostRuins/koboldcpp/releases). Unduh model teks [gemma-4-E2B-it-qat-UD-Q2_K_XL.gguf](https://huggingface.co/unsloth/gemma-4-E2B-it-qat-GGUF/blob/main/gemma-4-E2B-it-qat-UD-Q2_K_XL.gguf), sekitar 2,19 GB, yang dipakai pada demo tim.
+2. Buka KoboldCpp → pilih `.gguf` → **Launch**. Tunggu `Load Text Model OK: True` dan server muncul di port `5001`. Biarkan KoboldCpp terbuka. [Petunjuk resmi](https://github.com/LostRuins/koboldcpp/wiki#quick-start)
+3. Buka PowerShell, ambil ID model:
 
-Catatan pilihan database: soal capstone awal menyebut MySQL atau PostgreSQL, sedangkan desain proyek saat ini menggunakan H2. Catat perubahan ini dalam laporan dan pastikan kesesuaiannya dengan arahan pengajar.
+   ```powershell
+   $modelInfo = Invoke-RestMethod -Uri 'http://localhost:5001/v1/models'
+   $modelInfo.data[0].id
+   ```
 
-## Menjalankan Aplikasi
+4. Buat folder **`config` sejajar `pom.xml`**, lalu buat **`config/ai.properties`**:
 
-Langkah berikut berlaku setelah source code Java dan `pom.xml` tersedia di repository:
+   ```properties
+   ai.enabled=true
+   ai.endpoint=http://localhost:5001/v1/chat/completions
+   ai.model=GANTI_DENGAN_ID_MODEL_DARI_POWERSHELL
+   ```
 
-1. Clone repository dan buka folder proyek yang berisi `pom.xml` di NetBeans atau IDE yang mendukung Maven.
-2. Pastikan JDK 25 tersedia dan dependency H2 2.2.224 tercantum di `pom.xml`.
-3. Siapkan konfigurasi H2 lokal. Contoh URL: `jdbc:h2:file:./data/monitoring_anggaran` dengan pengguna `sa` dan password kosong.
-4. Jalankan `setup_demo_h2.sql` secara manual untuk membuat ulang tabel dan data dummy. **Script ini menghapus tabel yang ada; jangan jalankan saat aplikasi dibuka atau pada database yang datanya ingin dipertahankan.**
-5. Jalankan `id.capstone.anggaran.MainConsole`.
+   Salin ID aktual tanpa tanda kutip. Jika port berbeda, sesuaikan kedua alamat. Pastikan nama file bukan `ai.properties.txt`. Hentikan/jalankan ulang Java setelah mengubah konfigurasi.
+5. Klik kanan **`MainUjiAi.java` → Run File**. Klik area input pada panel **Output**, ketik setelah `Anda:`, lalu tekan **Enter**:
 
-Setup awal berisi 12 Satker, 26 pagu, dan 52 realisasi. Database berbasis file menyimpan data pada komputer masing-masing anggota.
+   ```text
+   Halo, jelaskan fungsi DAO dalam satu kalimat.
+   ```
 
-## Aturan Bisnis
+6. Uji data anggaran dengan satu baris berikut:
 
-- Kode dan nama Satker wajib diisi; kode Satker harus unik.
-- Setiap kombinasi Satker, akun, tahun anggaran, dan kegiatan hanya memiliki satu pagu.
-- Nilai pagu harus nol atau positif; nilai realisasi harus lebih besar dari nol.
-- Nomor SP2D wajib dan unik.
-- Realisasi hanya dapat dicatat untuk pagu yang tersedia dan tidak boleh melebihi sisa pagu.
-- Satker atau pagu yang masih memiliki data terkait tidak dapat dihapus.
-- Realisasi yang sudah tersimpan hanya dapat dibaca melalui aplikasi.
+   ```text
+   Data dummy rekap 2026: pagu Rp4.050.000.000; realisasi Rp1.798.750.000; sisa Rp2.251.250.000; serapan 44,41%. Berikan maksimal 3 poin pengamatan tanpa menambah angka atau menebak penyebab.
+   ```
 
-**Rumus:**
+   **AI menerima teks tersebut, belum membaca PostgreSQL atau repository secara otomatis. Setiap pertanyaan dikirim tanpa riwayat chat.** Sertakan data pada pesan yang sama. Ketik **`keluar`** untuk berhenti. Kualitas jawaban dan waktu respons bergantung pada model/perangkat.
 
-- Sisa pagu = nilai pagu − total realisasi.
-- Persentase realisasi = total realisasi ÷ nilai pagu × 100%.
-- Jika pagu bernilai nol, persentase ditampilkan sebagai 0%.
+## 4. Checklist dan bantuan singkat
 
-## Luaran Capstone
+- [ ] Build dan seluruh tes otomatis berhasil; catat jumlah aktualnya.
+- [ ] Koneksi PostgreSQL 18, data awal dan rekap telah diperiksa langsung.
+- [ ] Fitur pengelolaan diuji: CRUD Satker, pagu, pencatatan realisasi dan impor jika disertakan; lihat matriks di SDD.
+- [ ] Chat AI menjawab; permintaan terlihat di terminal KoboldCpp.
+- [ ] Tutup KoboldCpp, lalu kirim pertanyaan: tampil pesan AI tidak tersedia tanpa program berhenti mendadak.
+- [ ] Ubah `ai.enabled=false`, restart Java: tampil pesan AI dinonaktifkan. Aplikasi core tetap dapat digunakan tanpa AI.
 
-- Source code Java.
-- Script SQL untuk struktur database dan data dummy.
-- Laporan proyek dalam format PDF.
-- Video demonstrasi aplikasi.
+| Gejala | Periksa |
+| --- | --- |
+| `com.google.gson` tidak ditemukan | Dependency Gson `2.13.2` pada `pom.xml`, lalu build ulang. |
+| Koneksi PostgreSQL gagal | Server/port, database/user/password, driver JDBC dan status implementasi pada SDD. |
+| AI dinonaktifkan/konfigurasi belum siap | Lokasi `config/ai.properties`, nilai `ai.enabled`, working directory root proyek; restart Java. |
+| KoboldCpp tidak dapat dihubungi | Model sudah dimuat; perintah PowerShell pada langkah 3 berhasil. |
+| Waktu tunggu AI habis | Periksa progres KoboldCpp; service saat diperiksa menunggu maksimal 120 detik. |
 
-Seluruh data dalam proyek ini adalah data simulasi, bukan data transaksi anggaran riil.
+**Tim:** Saverio Ratu, Wawan Istiyono, A’thfi Rijal Mufied, Chandra Anshori, Rizaldy Dhaniar. Konfigurasi lokal, password dan model GGUF tidak dikumpulkan sebagai source code.

@@ -8,6 +8,7 @@ import util.*;
 import org.h2.tools.RunScript;
 import org.h2.api.Trigger;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -20,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(HasilUji.class)
 class ModulWTest {
     Connection c;
     String url;

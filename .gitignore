@@ -49,3 +49,7 @@ data/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Local AI configuration and model files
+/config/ai.properties
+*.gguf

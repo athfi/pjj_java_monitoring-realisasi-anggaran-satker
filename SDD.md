@@ -1,93 +1,68 @@
-# SOFTWARE DESIGN DOCUMENT (SDD)
+# SOFTWARE DESIGN DOCUMENT
 
-## Aplikasi Monitoring Realisasi Anggaran Satker
-
-**Versi:** 2.0  
-**Teknologi:** Java 25, Maven, JDBC, H2 Database  
-**Arsitektur:** Model-View-Controller (MVC) dengan Data Access Object (DAO)
+**Monitoring Realisasi Anggaran Satker · Ringkasan untuk penguji · 17 Oktober 2026**  
+**Target database: PostgreSQL 18.** Langkah Run ada di [README.md](README.md). Status target dan bukti implementasi dibedakan pada bagian 10.
 
 ## 1. Tujuan dan Ruang Lingkup
 
-Aplikasi digunakan untuk mengelola data satuan kerja (Satker), pagu akun, dan transaksi realisasi anggaran, serta memantau sisa anggaran dan persentase realisasi.
-
-Fitur utama:
-
-1. Pengelolaan data Satker: tambah, lihat, ubah, dan hapus.
-2. Pengelolaan pagu akun dan kegiatan anggaran.
-3. Pencatatan dan penampilan transaksi realisasi.
-4. Monitoring pagu, total realisasi, sisa anggaran, dan persentase realisasi.
-5. Rekapitulasi realisasi bulanan dan tahunan.
-6. Antarmuka Console dan GUI menggunakan aturan bisnis yang sama.
-
-Aplikasi tidak menggunakan autentikasi pengguna.
+Petugas mengelola Satker, pagu per akun/kegiatan dan realisasi dengan nomor SP2D, lalu melihat sisa dan persentase anggaran. Dataset Suku Dinas Pertamanan dan Hutan Kota seluruhnya simulasi. Fitur core: CRUD Satker/pagu, pencatatan dan pembacaan realisasi, validasi sisa, rekap serta impor CSV. AI lokal dikerjakan oleh **R** sebagai tambahan; angka resmi tetap dihitung Java.
 
 ## 2. Arsitektur Aplikasi
 
-Aplikasi menggunakan pola MVC dengan pemisahan akses database melalui DAO.
+```text
+View -> Controller -> DAO -> Database
+                 |
+                 `-> BudgetService -> DAO -> Database
 
-- **Model:** Menyimpan representasi data dan aturan dasar domain.
-- **DAO:** Menjalankan query JDBC untuk membaca dan mengubah data database.
-- **Controller:** Mengatur alur proses, validasi input, dan penanganan kesalahan.
-- **View:** Menyediakan antarmuka Console atau GUI.
-- **Util:** Menyediakan koneksi dan konfigurasi database.
+MainUjiAi -> AiInsightService -> HTTP lokal -> KoboldCpp
+```
 
-Alur proses:
-
-`View → Controller → Model/DAO → Database`
-
-Hasil pengolahan dikembalikan melalui Controller untuk ditampilkan oleh View.
+Model membawa data. Controller memvalidasi dan mengatur proses. DAO menjalankan SQL; `BudgetService` mengatur transaksi anggaran. Chat AI saat ini merupakan alur terpisah yang menerima teks, tanpa akses database atau riwayat percakapan. Pemisahan ini memudahkan pembagian tugas dan pengujian; biaya tambahannya adalah beberapa class dengan tanggung jawab kecil.
 
 ## 3. Struktur Direktori
 
 ```text
-src/
-├── main/java/
-│   ├── model/
-│   │   ├── Satker.java
-│   │   ├── PaguAkun.java
-│   │   └── Realisasi.java
-│   ├── dao/
-│   │   ├── CrudRepository.java
-│   │   ├── SatkerDAO.java
-│   │   ├── PaguAkunDAO.java
-│   │   ├── RealisasiDAO.java
-│   │   └── MonitoringDAO.java
-│   ├── controller/
-│   │   ├── SatkerController.java
-│   │   ├── PaguAkunController.java
-│   │   ├── RealisasiController.java
-│   │   └── MonitoringController.java
-│   ├── view/
-│   │   ├── console/
-│   │   └── gui/
-│   ├── util/
-│   │   └── DatabaseConnection.java
-│   ├── exception/
-│   │   └── PaguExceededException.java
-│   ├── MainConsole.java
-│   └── MainGui.java
-├── test/java/
-└── resources/
-    └── db.properties.example
+repository/                       <- buka root ini di NetBeans
+|-- pom.xml
+|-- README.md                     <- setup, Run dan checklist penguji
+|-- SDD.md                        <- desain dan bukti
+|-- Capstone_Action_Learning_Java.pdf  <- tugas asli, tetap utuh
+|-- setup_demo.sql                <- dataset PostgreSQL
+|-- db.properties                 <- konfigurasi database lokal
+|-- config/ai.properties          <- konfigurasi AI lokal
+|-- imports/                      <- contoh impor CSV
+|-- docs/                         <- buglog dan hasil uji pendukung
+`-- src/
+    |-- main/java/
+    |   |-- MainConsole.java      <- demo akses data/rekap
+    |   |-- MainUjiAi.java        <- chat console lokal
+    |   |-- MainUjiW.java         <- alat uji manual lama, database tersendiri
+    |   |-- model/{Satker,PaguAkun,Realisasi,MonitoringRow}.java
+    |   |-- dao/{CrudRepository,SatkerDAO,PaguAkunDAO,RealisasiDAO,MonitoringDAO}.java
+    |   |-- controller/{SatkerController,PaguAkunController,RealisasiController,MonitoringController}.java
+    |   |-- service/{BudgetService,AiInsightService}.java
+    |   |-- util/{DatabaseConnection,SetupDatabase,CsvImporter,Validasi,PesanDatabase}.java
+    |   `-- exception/PaguExceededException.java
+    |-- resources/                <- resource yang dikonfigurasi pada pom.xml
+    `-- test/java/pengujian/{ModulWTest,HasilUji}.java
 ```
 
-File `db.properties` yang berisi konfigurasi lokal tidak ikut dikumpulkan. File contoh `db.properties.example` disediakan sebagai template.
+Nama dalam `{...}` merupakan singkatan beberapa file. `db.properties` dan `config/ai.properties` dibuat pada perangkat masing-masing. Proyek nested `MonitoringRealisasi/` memiliki pom/entry point berbeda dan bukan root yang digunakan panduan ini. `MainGui` masih kerangka; diagram View di bawah menggambarkan desain antarmuka, bukan bukti GUI selesai.
 
 ## 4. Desain Kelas
 
 ### 4.1 Kelas Model
 
-Seluruh atribut domain bersifat `private`. Akses atribut dilakukan melalui getter dan setter yang sesuai.
+Seluruh atribut domain `private`; getter/setter mengatur akses. Uang menggunakan `BigDecimal`, tanggal `LocalDate`, ID `Long`.
 
 | Kelas | Atribut utama | Tanggung jawab |
-|---|---|---|
-| `Satker` | `id`, `kodeSatker`, `namaSatker` | Merepresentasikan data Satker. |
-| `PaguAkun` | `id`, `satkerId`, `kodeAkun`, `namaAkun`, `tahunAnggaran`, `deskripsiKegiatan`, `nilaiPagu` | Merepresentasikan pagu untuk suatu akun dan kegiatan. |
-| `Realisasi` | `id`, `paguId`, `tanggalRealisasi`, `nilaiRealisasi`, `keterangan` | Merepresentasikan transaksi realisasi. |
+| --- | --- | --- |
+| Satker | `id`, `kodeSatker`, `namaSatker` | Satu unit kerja. |
+| PaguAkun | `id`, `satkerId`, `kodeAkun`, `namaAkun`, `tahunAnggaran`, `deskripsiKegiatan`, `nilaiPagu` | Pagu satu akun/kegiatan. |
+| Realisasi | `id`, `paguId`, `nomorSp2d`, `tanggalRealisasi`, `nilaiRealisasi`, `keterangan` | Satu transaksi realisasi. |
+| MonitoringRow | `kode`, `nama`, `tahun`, `totalPagu`, `totalRealisasi`, `sisaPagu`, `persentase` | Hasil rekap, bukan tabel baru. |
 
-Nilai uang menggunakan `BigDecimal` untuk menjaga ketelitian perhitungan.
-
-Contoh deklarasi kelas:
+Contoh pola enkapsulasi seperti desain awal; kode lengkap berada di `model/Satker.java`:
 
 ```java
 public class Satker {
@@ -95,33 +70,23 @@ public class Satker {
     private String kodeSatker;
     private String namaSatker;
 
-    public Long getId() {
-        return id;
-    }
+    public Satker() { }
 
-    public String getKodeSatker() {
-        return kodeSatker;
-    }
-
-    public void setKodeSatker(String kodeSatker) {
+    public Satker(Long id, String kodeSatker, String namaSatker) {
+        this.id = id;
         this.kodeSatker = kodeSatker;
-    }
-
-    public String getNamaSatker() {
-        return namaSatker;
-    }
-
-    public void setNamaSatker(String namaSatker) {
         this.namaSatker = namaSatker;
     }
+
+    public Long getId() { return id; }
+    public String getKodeSatker() { return kodeSatker; }
+    public void setKodeSatker(String kodeSatker) { this.kodeSatker = kodeSatker; }
+    public String getNamaSatker() { return namaSatker; }
+    public void setNamaSatker(String namaSatker) { this.namaSatker = namaSatker; }
 }
 ```
 
-Pola enkapsulasi yang sama diterapkan pada `PaguAkun` dan `Realisasi`. Setter hanya disediakan untuk atribut yang memang boleh diubah.
-
 ### 4.2 Interface dan Polimorfisme
-
-Interface `CrudRepository<T>` menyediakan operasi akses data yang umum digunakan.
 
 ```java
 public interface CrudRepository<T> {
@@ -133,66 +98,58 @@ public interface CrudRepository<T> {
 }
 ```
 
-Implementasi:
-
-- `SatkerDAO implements CrudRepository<Satker>`
-- `PaguAkunDAO implements CrudRepository<PaguAkun>`
-- `RealisasiDAO implements CrudRepository<Realisasi>`
-
-Operasi `update()` dan `delete()` pada `RealisasiDAO` tidak boleh digunakan untuk mengubah atau menghapus transaksi realisasi. Implementasi dapat menolak operasi tersebut dengan exception. Controller realisasi hanya menyediakan pencatatan dan pembacaan transaksi.
-
-Contoh penggunaan polimorfisme:
+`SatkerDAO`, `PaguAkunDAO` dan `RealisasiDAO` mengimplementasikan interface. Realisasi menolak `update/delete` dengan `UnsupportedOperationException`.
 
 ```java
-CrudRepository<Satker> repository =
-        new SatkerDAO(connection);
-
-List<Satker> daftarSatker = repository.findAll();
+CrudRepository<Satker> repository = new SatkerDAO(connection);
+List<Satker> daftar = repository.findAll();
 ```
 
-Variabel `repository` menggunakan tipe interface, tetapi pemanggilan metode dijalankan oleh implementasi `SatkerDAO`. Dengan demikian, interface digunakan dalam kode, bukan sekadar dideklarasikan.
+Variabel bertipe interface menjalankan implementasi `SatkerDAO`; ini penggunaan polimorfisme dalam kode.
 
 ### 4.3 Kelas DAO
 
 | Kelas | Tanggung jawab |
-|---|---|
-| `SatkerDAO` | CRUD Satker melalui JDBC. |
-| `PaguAkunDAO` | Menambah, melihat, dan mengubah pagu; penghapusan mengikuti aturan integritas referensial. |
-| `RealisasiDAO` | Menambah dan melihat transaksi realisasi serta menghitung total realisasi. |
-| `MonitoringDAO` | Mengambil data monitoring dan rekapitulasi berdasarkan periode. |
+| --- | --- |
+| SatkerDAO | CRUD Satker. |
+| PaguAkunDAO | Akses pagu; menyediakan operasi lock/perubahan untuk service. |
+| RealisasiDAO | Tambah/baca transaksi dan hitung total realisasi. |
+| MonitoringDAO | Rekap per Satker/akun, total serta periode. |
 
-Seluruh query dijalankan menggunakan `PreparedStatement`. Nilai input tidak boleh digabungkan langsung ke string SQL.
+Query data memakai `PreparedStatement`. DAO dalam transaksi memakai koneksi yang diberikan service. `List` menyimpan kumpulan hasil; `Map<Integer, BigDecimal>` menyimpan rekap per bulan/tahun.
 
 ### 4.4 Kelas Controller
 
 | Kelas | Tanggung jawab |
-|---|---|
-| `SatkerController` | Memvalidasi dan mengatur CRUD Satker. |
-| `PaguAkunController` | Memvalidasi dan mengatur pengelolaan pagu. |
-| `RealisasiController` | Memvalidasi dan mencatat realisasi, termasuk menangani pelanggaran pagu. |
-| `MonitoringController` | Mengambil data monitoring serta menyiapkan rekapitulasi. |
+| --- | --- |
+| SatkerController | Validasi dan CRUD Satker. |
+| PaguAkunController | Pengelolaan pagu melalui service untuk penulisan. |
+| RealisasiController | Pencatatan melalui BudgetService dan pembacaan transaksi. |
+| MonitoringController | Mengambil rekap dari MonitoringDAO. |
 
-Controller menangani input dari View dan mengembalikan hasil atau pesan kesalahan yang dapat dipahami pengguna.
+Controller tidak otomatis memberikan data ke AI. Versi chat yang diperiksa dipanggil langsung oleh `MainUjiAi`.
 
-### 4.5 Kelas Utilitas dan Exception
+### 4.5 Kelas Utilitas, Service dan Exception
 
-- `DatabaseConnection`: membaca konfigurasi dan menyediakan koneksi JDBC.
-- `PaguExceededException`: exception khusus ketika pencatatan realisasi melampaui pagu.
-- `MainConsole`: menjalankan aplikasi Console.
-- `MainGui`: menjalankan aplikasi GUI Swing.
+- `DatabaseConnection`: membaca konfigurasi dan membuka koneksi JDBC.
+- `BudgetService`: mengunci pagu, memeriksa sisa dan menjalankan commit/rollback.
+- `CsvImporter`: preview, validasi dan penyimpanan satu file secara atomik.
+- `Validasi` / `PesanDatabase`: aturan input dan penerjemahan kegagalan database.
+- `PaguExceededException`: pelanggaran sisa pagu.
+- `AiInsightService`: Properties + Gson + HttpClient; kirim teks ke KoboldCpp, baca `choices[0].message.content`, kembalikan pesan fallback jika gagal. Connect timeout 2 detik; request timeout saat diperiksa 120 detik, batas keluaran 1.024 token. Tidak memerlukan proyek plugin.
 
 ## 5. Hubungan Antarkelas
 
-Diagram berikut menggunakan sintaks Mermaid `classDiagram`.
+Satu Satker memiliki banyak pagu; satu pagu memiliki banyak realisasi. Setiap pagu menunjuk satu Satker melalui `satkerId`; setiap realisasi menunjuk satu pagu melalui `paguId`.
 
 ```mermaid
 classDiagram
+    direction TB
     class Satker {
         -Long id
         -String kodeSatker
         -String namaSatker
     }
-
     class PaguAkun {
         -Long id
         -Long satkerId
@@ -202,15 +159,14 @@ classDiagram
         -String deskripsiKegiatan
         -BigDecimal nilaiPagu
     }
-
     class Realisasi {
         -Long id
         -Long paguId
+        -String nomorSp2d
         -LocalDate tanggalRealisasi
         -BigDecimal nilaiRealisasi
         -String keterangan
     }
-
     class CrudRepository~T~ {
         <<interface>>
         +findAll()
@@ -219,231 +175,151 @@ classDiagram
         +update(data)
         +delete(id)
     }
-
     class SatkerDAO
     class PaguAkunDAO
     class RealisasiDAO
     class MonitoringDAO
-
     class SatkerController
     class PaguAkunController
     class RealisasiController
     class MonitoringController
-
+    class BudgetService
+    class DatabaseConnection
     class ConsoleView
     class GuiView
-    class DatabaseConnection
+    class MainUjiAi
+    class AiInsightService
+    class KoboldCpp
 
-    Satker "1" --> "0..*" PaguAkun : memiliki
-    PaguAkun "1" --> "0..*" Realisasi : mencakup
-
-    CrudRepository~T~ <|.. PaguAkunDAO : s5
-    CrudRepository~T~ <|.. RealisasiDAO
-
-    SatkerController --> CrudRepository~T~
-    PaguAkunController --> CrudRepository~T~
-    RealisasiController --> RealisasiDAO
-    MonitoringController --> MonitoringDAO
-
-    SatkerDAO --> DatabaseConnection
-    PaguAkunDAO --> DatabaseConnection
-    RealisasiDAO --> DatabaseConnection
-    MonitoringDAO --> DatabaseConnection
-
+    Satker "1" -- "0..*" PaguAkun : memiliki
+    PaguAkun "1" -- "0..*" Realisasi : mencakup
+    CrudRepository <|.. SatkerDAO
+    CrudRepository <|.. PaguAkunDAO
+    CrudRepository <|.. RealisasiDAO
     ConsoleView --> SatkerController
     ConsoleView --> PaguAkunController
     ConsoleView --> RealisasiController
     ConsoleView --> MonitoringController
-
     GuiView --> SatkerController
     GuiView --> PaguAkunController
     GuiView --> RealisasiController
     GuiView --> MonitoringController
+    SatkerController --> SatkerDAO
+    PaguAkunController --> PaguAkunDAO : baca
+    PaguAkunController --> BudgetService : tulis
+    RealisasiController --> RealisasiDAO : baca
+    RealisasiController --> BudgetService : catat
+    MonitoringController --> MonitoringDAO
+    BudgetService --> PaguAkunDAO
+    BudgetService --> RealisasiDAO
+    BudgetService --> DatabaseConnection
+    SatkerDAO ..> Satker
+    PaguAkunDAO ..> PaguAkun
+    RealisasiDAO ..> Realisasi
+    MainUjiAi --> AiInsightService
+    AiInsightService --> KoboldCpp : HTTP lokal
 ```
 
-Hubungan domain:
+`0..*` berarti nol atau banyak; garis segitiga putus berarti implementasi interface. View menunjukkan rancangan antarmuka bersama; status kelengkapannya mengikuti bagian 10.
 
-- Satu Satker dapat memiliki banyak pagu akun.
-- Satu pagu akun dapat memiliki banyak transaksi realisasi.
-- Setiap pagu akun terhubung ke satu Satker.
-- Setiap transaksi realisasi terhubung ke satu pagu akun.
+## 6. Desain Database PostgreSQL 18
 
-## 6. Desain Database
-
-Database menggunakan H2 berbasis file dengan tiga tabel utama.
-
-### 6.1 Tabel `satker`
-
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| `id` | BIGINT | Primary key |
-| `kode_satker` | VARCHAR | Kode Satker, unik |
-| `nama_satker` | VARCHAR | Nama Satker |
-
-### 6.2 Tabel `pagu_akun`
-
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| `id` | BIGINT | Primary key |
-| `satker_id` | BIGINT | Foreign key ke `satker.id` |
-| `kode_akun` | VARCHAR | Kode akun |
-| `nama_akun` | VARCHAR | Nama akun |
-| `tahun_anggaran` | INT | Tahun anggaran |
-| `deskripsi_kegiatan` | VARCHAR | Pembeda kegiatan |
-| `nilai_pagu` | DECIMAL | Nilai pagu |
-
-Kombinasi `satker_id`, `kode_akun`, `tahun_anggaran`, dan `deskripsi_kegiatan` harus unik.
-
-### 6.3 Tabel `realisasi`
-
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| `id` | BIGINT | Primary key |
-| `pagu_id` | BIGINT | Foreign key ke `pagu_akun.id` |
-| `tanggal_realisasi` | DATE | Tanggal transaksi |
-| `nilai_realisasi` | DECIMAL | Nilai transaksi |
-| `keterangan` | VARCHAR | Keterangan transaksi |
-
-Relasi antartabel menggunakan foreign key. Penghapusan Satker atau pagu yang masih memiliki data terkait harus ditolak agar integritas referensial tetap terjaga.
-
-## 7. Konfigurasi Database dan Keamanan Query
-
-### 7.1 Konfigurasi
-
-Contoh file `db.properties.example`:
-
-```properties
-db.url=jdbc:h2:./data/monitoring_anggaran
-db.user=sa
-db.password=
+```mermaid
+erDiagram
+    SATKER ||--o{ PAGU_AKUN : memiliki
+    PAGU_AKUN ||--o{ REALISASI : mencakup
+    SATKER {
+        bigint id PK
+        varchar kode_satker UK
+        varchar nama_satker
+    }
+    PAGU_AKUN {
+        bigint id PK
+        bigint satker_id FK
+        varchar kode_akun
+        varchar nama_akun
+        int tahun_anggaran
+        varchar deskripsi_kegiatan
+        decimal nilai_pagu
+    }
+    REALISASI {
+        bigint id PK
+        bigint pagu_id FK
+        varchar nomor_sp2d UK
+        date tanggal_realisasi
+        decimal nilai_realisasi
+        varchar keterangan
+    }
 ```
 
-Aplikasi membaca nilai tersebut melalui `java.util.Properties`. File lokal `db.properties` dibuat berdasarkan contoh dan dimasukkan ke `.gitignore`.
+PK = identitas baris; FK = hubungan induk; UK = nilai unik. Kombinasi `satker_id + kode_akun + tahun_anggaran + deskripsi_kegiatan` juga unik. Nominal memakai `DECIMAL(18,2)`. Seluruh kolom wajib kecuali `keterangan`. Foreign key menolak penghapusan induk yang masih dipakai.
 
-Kredensial tidak ditulis langsung di source code. Konfigurasi aktual tidak ikut dikumpulkan; hanya file contoh yang disertakan.
+`setup_demo.sql` berisi skema dan data Suku Dinas: 12 Satker, 26 pagu, 52 realisasi. ID awal eksplisit; identity berikutnya 13, 27, 53. Jalankan manual pada database latihan karena script mereset tiga tabel. Contoh PostgreSQL:
 
-### 7.2 PreparedStatement
-
-Seluruh query menggunakan `PreparedStatement`, termasuk query tambah, ubah, hapus, pencarian, monitoring, dan rekapitulasi.
-
-Contoh:
-
-```java
-String sql = "SELECT * FROM satker WHERE kode_satker = ?";
-PreparedStatement ps = connection.prepareStatement(sql);
-ps.setString(1, kodeSatker);
-
-ResultSet rs = ps.executeQuery();
+```sql
+CREATE TABLE satker (
+    id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    kode_satker VARCHAR(20) NOT NULL UNIQUE,
+    nama_satker VARCHAR(120) NOT NULL
+);
 ```
 
-Penggabungan string dari input pengguna ke perintah SQL tidak diperbolehkan. Nama kolom dan arah pengurutan yang tidak dapat diikat sebagai parameter harus dipilih dari daftar nilai yang telah ditentukan aplikasi.
+## 7. Aturan Bisnis
 
-## 8. Aturan Bisnis dan Proses
+| Data/proses | Aturan penting |
+| --- | --- |
+| Satker | Kode/nama wajib, kode unik; hapus hanya jika tidak mempunyai pagu. |
+| Pagu | Satker valid, identitas lengkap, nilai >= 0; kombinasi identitas unik. |
+| Perubahan pagu | Nilai baru >= total realisasi; identitas pagu terpakai tidak boleh diganti. |
+| Realisasi | Pagu valid, SP2D wajib/unik, tanggal valid, nilai > 0 dan <= sisa. Transaksi tersimpan hanya dibaca. |
+| Uang | BigDecimal; maksimal 2 desimal dan 16 digit sebelum desimal. |
+| Rekap | Sisa = pagu - realisasi; persen = realisasi / pagu x 100; pagu nol menghasilkan 0%. Jumlahkan uang sebelum menghitung persen gabungan. |
+| Periode | Bulan/tahun transaksi mengikuti tanggal realisasi; tahun anggaran mengikuti pagu. |
+| CSV | Impor Satker dahulu, lalu pagu; preview/konfirmasi, tolak duplikat; satu file satu transaksi. Satu baris gagal membatalkan seluruh file. |
 
-### 8.1 Pengelolaan Satker
+**Transaksi aman:** buka satu koneksi → isolation `READ_COMMITTED`, auto-commit mati → lock pagu `SELECT ... FOR UPDATE` → hitung total → validasi → tulis → commit. Kegagalan menyebabkan rollback. Penurunan pagu memakai lock yang sama; DAO tidak menutup koneksi transaksi milik service.
 
-1. Pengguna mengisi data Satker.
-2. Controller memeriksa input wajib dan format data.
-3. DAO menyimpan atau memperbarui data menggunakan `PreparedStatement`.
-4. Kode Satker harus unik.
-5. Penghapusan ditolak jika Satker masih memiliki pagu akun.
-
-CRUD Satker mencakup tambah, lihat, ubah, dan hapus.
-
-### 8.2 Pengelolaan Pagu
-
-1. Pengguna memilih Satker dan mengisi data pagu.
-2. Controller memvalidasi nilai pagu dan kelengkapan data.
-3. DAO menyimpan data dengan foreign key yang valid.
-4. Kombinasi Satker, akun, tahun anggaran, dan deskripsi kegiatan harus unik.
-5. Penghapusan pagu ditolak jika masih memiliki transaksi realisasi.
-
-### 8.3 Pencatatan Realisasi
-
-1. Pengguna memilih pagu akun.
-2. Pengguna mengisi tanggal, nilai realisasi, dan keterangan.
-3. Controller memvalidasi input.
-4. DAO memulai transaksi database dan memeriksa total realisasi yang sudah tercatat.
-5. Jika total baru melebihi pagu, proses dibatalkan dan `PaguExceededException` ditangani oleh Controller.
-6. Jika valid, data disimpan dan transaksi di-commit.
-7. Transaksi realisasi yang sudah tersimpan tidak dapat diubah atau dihapus melalui aplikasi.
-
-Pemeriksaan batas pagu dan penyimpanan harus berlangsung dalam transaksi database yang aman terhadap pencatatan bersamaan, misalnya dengan mengunci baris pagu selama validasi dan penyimpanan.
-
-### 8.4 Monitoring
-
-Untuk setiap pagu akun, aplikasi menampilkan:
-
-- Total realisasi.
-- Sisa anggaran = nilai pagu − total realisasi.
-- Persentase realisasi = total realisasi ÷ nilai pagu × 100%.
-
-Jika nilai pagu nol, persentase ditetapkan sebesar 0% agar tidak terjadi pembagian dengan nol.
-
-## 9. Collections dan Rekapitulasi
-
-Data hasil query disimpan dan diolah menggunakan Java Collections.
-
-Contoh:
-
-```java
-List<Realisasi> daftarRealisasi;
-Map<Integer, BigDecimal> totalRealisasiPerBulan;
-Map<Integer, BigDecimal> totalRealisasiPerTahun;
-```
-
-- `List<Realisasi>` menyimpan kumpulan transaksi untuk ditampilkan atau diproses.
-- `Map<Integer, BigDecimal>` menyimpan total berdasarkan bulan atau tahun.
-- Rekapitulasi difilter berdasarkan Satker, akun, kegiatan, dan periode yang dipilih.
-
-Rekap bulanan menggunakan bulan dari tanggal realisasi. Rekap tahunan menggunakan tahun dari tanggal realisasi, sedangkan filter tahun anggaran mengikuti data pagu yang dipilih.
-
-## 10. Validasi dan Exception Handling
-
-Aplikasi menangani kesalahan tanpa menghentikan program secara mendadak.
+## 8. Exception yang Krusial
 
 | Kondisi | Penanganan |
-|---|---|
-| Input wajib kosong | Tampilkan pesan bahwa kolom wajib harus diisi. |
-| Input angka tidak valid | Tampilkan pesan format angka tidak valid. |
-| Tanggal tidak valid | Tampilkan pesan format tanggal tidak valid. |
-| Kode Satker duplikat | Tolak penyimpanan dan tampilkan pesan yang jelas. |
-| Nilai pagu negatif | Tolak penyimpanan. |
-| Nilai realisasi nol atau negatif | Tolak pencatatan. |
-| Realisasi melebihi pagu | Tangani `PaguExceededException` dan tampilkan pesan pelanggaran batas pagu. |
-| Data terkait masih digunakan | Tolak penghapusan dan jelaskan hubungan data yang menghalangi. |
-| Kegagalan database | Catat detail teknis yang diperlukan, tampilkan pesan yang aman, dan rollback transaksi yang gagal. |
+| --- | --- |
+| Input kosong/format/nominal salah | Tolak dengan pesan field yang jelas; kembali ke pemanggil/menu. |
+| Pagu terlampaui | `PaguExceededException`, rollback, tampilkan sisa. |
+| Duplikat/FK/kegagalan SQL | Terjemahkan SQLException, rollback jika bertransaksi; detail teknis tanpa password. |
+| AI mati/timeout/JSON tidak valid | Pesan AI tidak tersedia; core tetap terpisah. Interupsi thread dipulihkan. |
 
-Contoh custom exception:
+Statement/ResultSet ditutup melalui try-with-resources. Input data diikat ke PreparedStatement; nama kolom/arah urut dipilih dari daftar tetap.
 
-```java
-public class PaguExceededException extends RuntimeException {
-    public PaguExceededException(String message) {
-        super(message);
-    }
-}
-```
+## 9. Checklist Pengujian
 
-Controller menangkap exception yang relevan. View Console menampilkan pesan melalui keluaran teks, sedangkan View GUI menggunakan dialog Swing.
+Centang hanya setelah dicoba pada versi yang diserahkan. Dataset harus bersih untuk membandingkan angka awal; jangan memakai database tes bersama untuk kasus yang mengubah data.
 
-## 11. Antarmuka Pengguna
+| Cek | Skenario | Hasil yang diharapkan |
+| --- | --- | --- |
+| [ ] | Build dan Test | BUILD SUCCESS; catat jumlah tes dan database yang dipakai. |
+| [ ] | PostgreSQL 18 | Koneksi Java berhasil; 12/26/52 record dan data bertahan setelah restart. |
+| [ ] | CRUD Satker dan pagu | Tambah/baca/ubah/hapus valid; kosong, duplikat dan FK ditolak. |
+| [ ] | Batas pagu | Dari data awal, pagu 1 mempunyai sisa Rp7,2 juta: tepat sisa diterima, Rp1 berikutnya ditolak. |
+| [ ] | Transaksi bersamaan | Dua pencatatan Rp5 juta pada sisa Rp7,2 juta: hanya satu commit. |
+| [ ] | Identitas/nilai pagu | Identitas terpakai dan penurunan nilai di bawah realisasi ditolak. |
+| [ ] | Rekap awal 2026 | Pagu Rp4.050.000.000; realisasi Rp1.798.750.000; sisa Rp2.251.250.000; 44,41%. |
+| [ ] | Impor jika disertakan | Preview/batal, file valid, file salah, rollback dan impor ulang diperiksa. |
+| [ ] | AI | Aktif, dinonaktifkan, server mati, timeout; jawaban sesuai teks yang diberikan. |
 
-Aplikasi menyediakan dua alternatif antarmuka dengan Controller dan Model yang sama.
+## 10. Status Implementasi dan Bukti Uji
 
-**Console**
+| Bagian | Bukti dan batas kesimpulan |
+| --- | --- |
+| Core | 33 tes ModulWTest lulus pada build lokal terakhir yang dicatat; [log W](docs/hasil-uji-W.txt) adalah bukti snapshot sebelumnya. Tes tersebut menggunakan H2, bukan bukti kompatibilitas PostgreSQL 18. |
+| PostgreSQL 18 | SQL tersedia pada `setup_demo.sql`. Root pom belum memuat driver PostgreSQL; DatabaseConnection masih default H2; MainConsole masih memeriksa metadata huruf besar dan dapat menjalankan setup H2. MainUjiW juga memakai H2 tersendiri. Penyelarasan dan uji runtime PostgreSQL belum terverifikasi. |
+| Antarmuka | MainConsole merupakan demo DAO/rekap; MainUjiW alat uji modul. MainGui masih TODO. Proyek nested memiliki konfigurasi Java 26; tidak digunakan untuk langkah README. |
+| AI lokal | Log demo pengguna menunjukkan Gemma menjawab melalui API localhost. MainUjiAi adalah chat tanpa riwayat; belum ada pengambilan data DB otomatis. Pengamatan ini bukan klaim seluruh uji AI otomatis sudah ada di repo. |
+| Bug | [Buglog W](docs/buglog-W.md) memuat lima temuan, penyebab, perbaikan dan method uji ulang: bypass pagu, pagu di bawah realisasi, identitas pagu terpakai, teks spasi dan pembulatan nominal. |
 
-- Menu pengelolaan Satker.
-- Menu pengelolaan pagu.
-- Menu pencatatan dan penampilan realisasi.
-- Menu monitoring dan rekapitulasi.
+## 11. Kontribusi dan Penyerahan
 
-**GUI Swing**
+Pembagian desain tim: **At** model/SQL; **Al** JDBC/DAO; **W** service, validasi dan CSV; **C** antarmuka/integrasi; **R** mutu dan AI lokal. Cocokkan kontribusi akhir dengan commit serta laporan; pembagian ini bukan bukti penyelesaian tiap anggota.
 
-- Form Satker.
-- Form pagu akun.
-- Form realisasi.
-- Tabel monitoring dan rekapitulasi.
-- Dialog validasi dan kesalahan.
+Ketua menyerahkan tautan repository, SQL/data dummy, laporan PDF maksimal 10 halaman dan video maksimal 5 menit. Laporan menyertakan identitas/peran, masalah, desain/alternatif, hasil fitur dan pengujian, minimal tiga bug nyata, kendala, serta alat AI dan bagian yang dibantu. Deadline yang disetujui: Jumat, 16 Oktober 2026 pukul 23.00 WIB.
 
-Keduanya menjalankan aturan validasi dan bisnis yang sama.
-
+Dokumen tugas asli [Capstone_Action_Learning_Java.pdf](Capstone_Action_Learning_Java.pdf) tetap menjadi rujukan dan tidak diubah. Konfigurasi aktual/password dan model GGUF tidak dimasukkan sebagai source code.
